@@ -1,5 +1,4 @@
-ハンズオンメモ
-===
+ハンズオンメモ===
 
 ■VPCとパブリックサブネットの作成
 ---
@@ -62,7 +61,7 @@ VPN接続を利用する場合はその接続時間に応じて課金される�
 
 ■インスタンスへSSH接続する
 ---
-1. SSHで接続
+SSHで接続
 ```bash:
 ssh -i ~/.ssh/my-key.pem ec2-user@xx.xx.xx.xx
 ```
@@ -70,30 +69,35 @@ ssh -i ~/.ssh/my-key.pem ec2-user@xx.xx.xx.xx
   * ユーザは **ec2-user**
   * IPアドレスはEC2ダッシュボード->「パブリックIP」を確認
 
-2. ログイン出来た事を確認。満足したらexitで切断。
+ログイン出来た事を確認。満足したらexitで切断。
 ついでにifconfigでも打ってIPアドレスなどを確認してみよう。
 
 ■httpd(Apache HTTP Server))のインストール〜設定
 ---
-1. 先ほど起動したWebサーバーのインスタンスへSSH接続
-2. yumコマンドでhttpdをインストール
+※先ほど起動したWebサーバーのインスタンスへSSH接続した所からスタート
+
+* yumコマンドでhttpdをインストール
 ```bash:
 sudo yum -y install httpd
 ```
-3. httpdを起動
+
+* httpdを起動
 ```bash:
 sudo service httpd start
 ```
-4. 自動起動の設定
+
+* 自動起動の設定
 ```bash:
 sudo chkconfig httpd on
 ```
-5. 自動起動設定の確認
+
+* 自動起動設定の確認
 ```bash:
 sudo chkconfig --list httpd
 ```
 -> ランレベル「3:on」となっている事
-6. psコマンドでプロセスを確認
+
+* psコマンドでプロセスを確認
 ```bash:
 ps ax
 ```
@@ -101,7 +105,8 @@ ps ax
   * ※オプションの意味
     * a: 全てのプロセスを表示
     * x: 別のターミナルに結び付けられているプロセスも表示
-7. ネットワークの待受状態を確認
+
+* ネットワークの待受状態を確認
 ```bash:
 sudo lsof -i -n -P
 ```
@@ -166,11 +171,13 @@ sudo lsof -i -n -P
   * タイプ: **すべてのICMP**
   * 送信元：**任意の場所、0.0.0.0/0**
   * 「保存」をクリック
-4. WebサーバーへSSH接続
+
+* WebサーバーへSSH接続
 ```bash:
 ssh -i ~/.ssh/my-key.pem ec2-user@xx.xx.xx.xx
 ```
-5. pingコマンドをDBサーバー向けに実行
+
+* pingコマンドをDBサーバー向けに実行
 ```bash:
 ping 10.0.2.10
 ```
@@ -178,23 +185,25 @@ ping 10.0.2.10
 
 ■DBサーバーへSSH接続する
 ---
-1. 秘密鍵をWebサーバーへアップロードする
+* 秘密鍵をWebサーバーへアップロードする
 ```bash:
 scp -i ~/.ssh/my-key.pem ~/.ssh/my-key.pem ec2-user@xx.xx.xx.xx:~/.ssh/
 ```
 Webサーバーの~/.ssh/へmy-key.pemを転送
 
-2. WebサーバーへSSH接続
+* WebサーバーへSSH接続
 ```bash:
 ssh -i ~/.ssh/my-key.pem ec2-user@xx.xx.xx.xx
 ```
-3. 先ほど転送した鍵のパーミッションを自分だけ読める権限に変更
+
+* 先ほど転送した鍵のパーミッションを自分だけ読める権限に変更
 ```bash:
 chmod 400 ~/.ssh/my-key.pem
 ```
-4. 鍵を使い更にDBサーバーへSSH接続する
+
+* 鍵を使い更にDBサーバーへSSH接続する
 ```bash:
-ssh -i ~/.ssh/aws-key.pem ec2-user@10.0.2.10
+ssh -i ~/.ssh/my-key.pem ec2-user@10.0.2.10
 ```
 
 ### 【AWS用語集】
