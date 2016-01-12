@@ -40,6 +40,7 @@ VPN接続を利用する場合はその接続時間に応じて課金される�
   * [Linux AMI 仮想化タイプ](http://docs.aws.amazon.com/ja_jp/AWSEC2/latest/UserGuide/virtualization_types.html)
 4. インスタンスタイプを選択：**t2.micro** を選択
   * 汎用タイプのインスタンスの中で最も安価なやつ。
+    * つい最近（2015/12/15） **t2.nano**  がリリースされて最安の座を奪われましたが、t2.nanoは無償枠ではないため、t2.microを使います。
   * [EC2インスタンスの種類一覧と料金](http://aws.amazon.com/jp/ec2/pricing/)
 5. インスタンスの詳細設定を行う（次項）
 
@@ -206,25 +207,182 @@ ssh -i ~/.ssh/my-key.pem ec2-user@10.0.2.10
 ---
 
 ### NATサーバー用のセキュリティグループを作成する
-* 新規SG
-* インバウンド
-  * HTTP,HTTPSでプライベートサブネットのCIDRを指定
-  * SSHでWebサーバーからの接続も許可
-* アウトバウンド
-  * HTTP,HTTPSでAnywhere許可
+* プライベートサブネットからのHTTP, HTTPS（yumで使うプロトコル）のみ受け入れる
+* 同プロトコルの外部向き通信を許可する
+* 設定時に必要なのでWebサーバー（踏み台）からのSSHも許可しておく
 
 
+1. VPCダッシュボード-> 「セキュリティグループ」 -> 「セキュリティグループの作成」
+2. セキュリティグループ概要を入力して作成
+  * グループ名：**NAT-SG**
+  * 説明：NAT Security Group *※日本語不可*
+  * VPC：**wp-practice**
+3. 作成したNAT-SGを一覧から選択してインバウンドルールを編集
+  * プライベートサブネットからのHTTPを許可
+    * タイプ：HTTP
+    * 送信元：10.0.2.0/24
+  * プライベートサブネットからのHTTPSを許可
+    * タイプ：HTTPS
+    * 送信元：10.0.2.0/24
+  * WebサーバーからのSSHを許可
+    * タイプ：SSH
+    * 送信元：10.0.1.10/32
+4. 続けて、アウトバウンドルールを編集
+  * 外部へのHTTPを全て許可
+    * タイプ：HTTP
+    * 送信先：0.0.0.0/0
+  * 外部へのHTTPSを許可
+    * タイプ：HTTPS
+    * 送信先：0.0.0.0/0
 
 ### NATサーバーのインスタンスを作成する
 
-### プライベートサブネットのルートテーブルを編集する
+1. EC2ダッシュボード ->「インスタンス」->「インスタンスの作成」
+2. AMIを選択：コミュニティAMI-> **amzn-ami-vpc-nat-hvm-2015.03.0.x86_64-gp2** を選択
+起動するサブネットを選択： **パブリックサブネット** に設定。
+3. インスタンスタイプを選択：**t2.micro** を選択
+4. ネットワーク：wp-practice
+5. サブネット：パブリックサブネット
+6. 自動割当パブリックIP：有効化
+7. ネットワークインタフェース：デバイスeth0のプライマリIP に **「10.0.1.20」** を入力
+  * パブリックサブネットのIP範囲で使ってないやつ（つまり10以外）なら何でも良い。
+4. インスタンス名をつける：**NATサーバー** と命名
+5. セキュリティグループを設定する：
+  * 既存のキュリティグループを選択 -> さっき作った「NAT-SG」
+6. キーペア：既存のものをシチエ
+7. 起動
 
-疎通確認
+### NATサーバーの送信元／送信先チェックを無効化する
+
+* EC2のデフォルト構成では「パケットを受け取るには、そのインスタンスが送受信するトラフィックの送信元、または、送信先である」という条件が課せられていが、NATサーバではパケットの送信元IPアドレスや宛先IPアドレスを書き換えるため、この条件に引っかかる。
+なのでNATサーバでは「送信元、送信先チェック」を無効にする必要がある
+
+
+1. EC2ダッシュボード-> インスタンス
+2. NATサーバーのインスタンスを右クリック-> 「ネットワーキング」->「送信元／送信先の変更チェック」-> 無効化
+
+### プライベートサブネットのルートテーブルを編集する
+* プライベートサブネットから外部向けの通信がNATサーバーに流れる様に設定する
+* つまり、プライベートサブネットのデフォルトゲートウェイをNATサーバーに設定する
+
+
+1. VPCダッシュボード->「サブネット」->「プライベートサブネット」->「ルートテーブル」-> ルートテーブルのIDをクリック -> 「ルート」を編集
+2. 「別ルートの追加」
+  * 送信先：0.0.0.0/0
+  * ターゲット：NATサーバー
+3. 保存
+
+### プライベートネットワークから外部ネットワークへの疎通確認
+* DBサーバーからインターネット上のサーバへHTTP,HTTPSアクセスを試みる
+
+* WebサーバーへSSH接続
+```bash:
+ssh -i ~/.ssh/my-key.pem ec2-user@xx.xx.xx.xx
+```
+* DBサーバーへSSH接続する
+```bash:
+ssh -i ~/.ssh/my-key.pem ec2-user@10.0.2.10
+```
+* cURLコマンドでインターネットへHTTPアクセス
+```bash:
+curl http://www.nexcert.com/
+curl https://www.nexcert.com/
+```
+
+★NATサーバーのインスタンスを停止した状態で同様の操作を試してみよう
 
 ■WorｄPressのインストール
 ---
 
 ### DBサーバーへMySQLをインストールする
+
+* DBサーバーへSSH ※手順省略
+* MySQLをyumでインストール
+```bash:
+sudo yum -y install mysql-server
+```
+* MySQLサーバーを起動
+```bash:
+sudo service mysqld start
+```
+* MySQLのrootユーザのパスワードを変更
+```bash:
+mysqladmin -u root password
+-> 新しいパスワードを入力（確認入力あり）
+```
+* MySQLコンソールにログインし、WordPress用のDBとwordpressユーザを作成。権限を付与。
+```bash:
+mysql -u root -p
+(パスワードを入力)
+mysql> CREATE DATABASE wordpress DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+mysql> grant all on wordpress.* to wordpress@"%" identified by 'wordpresspasswd';
+mysql> flush privileges;
+mysql> select user, host from mysql.user;
+(wordpressユーザが居ることを確認)
+mysql> exit
+```
+* MySQLサーバーの自動起動設定
+```bash:
+sudo /sbin/chkconfig mysqld on
+```
+
+### WebサーバーへWordPressをインストールする
+
+* WebサーバーへSSH ※手順省略
+* PHP, MySQL用ライブラリをyumインストール
+```bash:
+sudo yum -y install php php-mysql php-mbstring
+```
+* DB接続用にMySQLコマンドもyumインストール
+```bash:
+sudo yum -y install mysql
+```
+* DBサーバー上のMySQLへのログイン確認
+```bash:
+mysql -h 10.0.2.10 -u wordpress -p
+(パスワードを入力)※「wordpresspasswd」の方
+(ログイン出来たことを確認)
+mysql> exit
+```
+* WordPressのダウンロード
+```bash:
+wget http://ja.wordpress.org/latest-ja.tar.gz
+```
+* アーカイブ展開、ファイル移動、所有者の変更
+```bash:
+tar xzvf latest-ja.tar.gz
+cd wordpress/
+sudo cp -r * /var/www/html/
+sudo chown -R apache:apache /var/www/html
+```
+
+### WordPressの初期設定
+
+* apacheを再起動（起動）する
+```bash:
+sudo /sbin/service httpd restart
+```
+* ブラウザでWebサーバーのパブリックIPを入力してアクセス
+* WordPressの初期設定画面が表示されること
+  1. 「さぁ、始めましょう！」
+  2. 設定項目を入力して「送信」
+    * データベース名：**wordpress** （デフォルト）
+    * ユーザー名：**wordpress**
+    * パスワード：**wordpresspasswd**
+    * データベースのホスト名：**10.0.2.10**
+    * テーブル接頭辞：wp_（デフォルト）
+  3. 「インストール実行」
+* ようこそ画面が表示されること
+  * サイトのタイトル：好きなものを設定
+  * ユーザー名：好きなものを設定（ブログへのログイン時必要）
+  * パスワード：好きなものを設定（ブログへのログイン時必要）
+  * メールアドレス：受信出来るアドレスを設定
+  * 「WordPressをインストール」
+* ログイン画面が表示されるので、直前に作成したユーザー名、パスワードでログイン
+* WordPressダッシュボードが表示されること
+
+**完成！**
+記念に記事を投稿しましょう。
 
 【AWS用語集】
 ---
