@@ -1,7 +1,10 @@
 ■VPCとパブリックサブネットの作成
 ===
 
+ [VPCとは](http://docs.aws.amazon.com/ja_jp/AmazonVPC/latest/UserGuide/VPC_Introduction.html)
 ### VPCと一つのサブネットを作成
+
+[VPCとサブネット](http://docs.aws.amazon.com/ja_jp/AmazonVPC/latest/UserGuide/VPC_Subnets.html)
 
 1. マネジメントコンソールにアクセス、VPCダッシュボードへ移動
 2. VPC作成ウィザードを起動
@@ -16,6 +19,9 @@
   * ほかデフォルト
 
 ### パブリックサブネットをインターネットに接続
+
+[インターネットゲートウェイ](http://docs.aws.amazon.com/ja_jp/AmazonVPC/latest/UserGuide/VPC_Internet_Gateway.html)
+
 1. VPCダッシュボード ->「サブネット」->「[チーム名]-パブリックサブネット」を選択
 2. ルートテーブルタブを選択し、「rtb-xxxxxxxx」のリンクを選択
 3. ルートテーブルの設定を確認
@@ -23,8 +29,9 @@
   * 0.0.0.0/0：igw-xxxxxxxx（インターネットゲートウェイのID）
     * VPC内のアドレス範囲以外はインターネットへ流す設定（デフォルトゲートウェイ）
 
-★本には設定手順があるが、ウィザードでパブリックサブネットを作ったため、インターネットゲートウェイ設定済みのルートテーブルまで作成済みであった
-
 #### ★VPCの利用料金
 VPC自体の利用に関しては無料。VPC内で起動したEC2などの料金は別途EC2として課金される。
 VPN接続を利用する場合はその接続時間に応じて課金される。
+
+#### ★サブネットの切り方ってどう考えりゃ良いの？
+[AWSのネットワーク設計をサボらないでちゃんとやる - Qiita](http://qiita.com/nisshiee/items/df4261132ec686964605)

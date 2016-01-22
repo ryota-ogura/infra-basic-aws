@@ -1,6 +1,10 @@
 ■NATサーバーの構築
 ===
 
+[NATについて](http://docs.aws.amazon.com/ja_jp/AmazonVPC/latest/UserGuide/vpc-nat.html)
+
+-> 今回は **「NAT インスタンス」** を使います
+
 ### NATサーバー用のセキュリティグループを作成する
 * プライベートサブネットからのHTTP, HTTPS（yumで使うプロトコル）のみ受け入れる
 * 同プロトコルの外部向き通信を許可する

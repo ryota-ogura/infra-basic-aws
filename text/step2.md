@@ -1,7 +1,12 @@
 ■Webサーバーの構築
 ===
 
+[Amazon EC2 とは](http://docs.aws.amazon.com/ja_jp/AWSEC2/latest/UserGuide/concepts.html)
+
 ### インスタンスの作成
+
+[インスタンスとAMI](http://docs.aws.amazon.com/ja_jp/AWSEC2/latest/UserGuide/ec2-instances-and-amis.html)
+
 1. マネジメントコンソールにアクセス、EC2ダッシュボードへ移動 ＃リージョンがVPCと同じになってること
 2. メニュー「インスタンス」->「インスタンスの作成」
 3. AMIを選択：**Amazon Linux AMI 2015.09.1 (HVM)** を選択

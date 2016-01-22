@@ -1,5 +1,7 @@
-■WorｄPressのインストール
+■WordPressのインストール
 ===
+
+[WordPressについて](https://ja.wordpress.org/)
 
 ### DBサーバーへMySQLをインストールする
 

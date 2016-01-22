@@ -1,6 +1,8 @@
 ■プライベートサブネットとDBサーバーの構築
 ===
 
+[プライベートサブネットとは](http://docs.aws.amazon.com/ja_jp/AmazonVPC/latest/UserGuide/VPC_Subnets.html#vpc-subnet-diagram)
+
 ### プライベートサブネットの作成
 1. VPCダッシュボードから「サブネット」を選択
   * 先ほど作った「[チーム名]-パブリックサブネット」がある事もついでに確認
